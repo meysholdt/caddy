@@ -1,102 +1,72 @@
-# Caddyfile configuration for Gitpod workspace
-# This file configures Caddy to serve a simple web application
-
-# Global options
 {
-    # Enable admin API for configuration management
     admin off
     
-    # Log level
-    log {
-        level INFO
-    }
-    
-    # Auto HTTPS settings
-    auto_https disable_redirects
-}
-
-# Main site configuration
-:8080 {
-    # Root directory for static files
-    root * /workspaces/caddy/website
-    
-    # Enable file server
-    file_server
-    
-    # Enable directory browsing
-    # browse
-    
-    # Handle 404 errors
-    try_files {path} /index.html
-    
-    # Basic security headers
-    header {
-        # Security headers
-        X-Content-Type-Options nosniff
-        X-Frame-Options DENY
-        X-XSS-Protection "1; mode=block"
-        Referrer-Policy strict-origin-when-cross-origin
-        
-        # Remove server header
-        -Server
-    }
-    
-    # Logging
     log {
         output stdout
         format console
         level INFO
     }
-    
-    # Handle common file types
-    @static {
-        file
-        path *.css *.js *.png *.jpg *.jpeg *.gif *.ico *.svg *.woff *.woff2 *.ttf *.eot
+
+    servers :4308 {
+        protocols h1
     }
-    header @static Cache-Control "public, max-age=31536000"
 }
 
-# # HTTPS configuration (if needed)
-# :443 {
-#     # Root directory for static files
-#     root * /workspace/public
-    
-#     # Enable file server
-#     file_server
-    
-#     # Enable directory browsing
-#     # browse
-    
-#     # Handle 404 errors
-#     try_files {path} /index.html
-    
-#     # TLS configuration
-#     tls internal
-    
-#     # Basic security headers
-#     header {
-#         # Security headers
-#         X-Content-Type-Options nosniff
-#         X-Frame-Options DENY
-#         X-XSS-Protection "1; mode=block"
-#         Referrer-Policy strict-origin-when-cross-origin
-#         Strict-Transport-Security "max-age=31536000; includeSubDomains"
-        
-#         # Remove server header
-#         -Server
-#     }
-    
-#     # Logging
-#     log {
-#         output stdout
-#         format console
-#         level INFO
-#     }
-    
-#     # Handle common file types
-#     @static {
-#         file
-#         path *.css *.js *.png *.jpg *.jpeg *.gif *.ico *.svg *.woff *.woff2 *.ttf *.eot
-#     }
-#     header @static Cache-Control "public, max-age=31536000"
-# } 
+(serve-proxy) {
+  reverse_proxy http://localhost:4208 {
+#    import proxy-headers
+    transport http {
+#      dial_timeout 3m # the vite's static-server can await too long while rebuilding
+#      keepalive_interval 15m # for Web Sockets connection
+      versions 1.1
+    }
+  }
+}
+
+(proxy-headers) {
+  header_up Host {http.reverse_proxy.upstream.host}
+
+  # Hide that we use proxy, otherwise Cloudflare blocks with 403
+  header_up -X-Forwarded-Host
+  header_up -X-Forwarded-For
+  header_up -X-Forwarded-Proto
+
+header_up -Referer
+  header_up -Origin
+}
+
+(api-proxy-rotocol) {
+  transport http {
+    versions 2
+  }
+}
+
+(api-proxy) {
+  reverse_proxy {args[0]} {
+    import api-proxy-rotocol
+    import proxy-headers
+
+    # Make cookies work with HTTP (instead of only HTTPS)
+    # Remove 'Secure ;' from the cookies options (browser saves cookies for httpS if there is the 'Secure' mark)
+    # header_down Set-Cookie "^(.*); Secure(;.*)?$" "$1$2"
+  }
+}
+
+# arg 0 - origin (ex.: https://www.gitpod.io)
+(app-routes) {
+
+  handle /blog* {
+    import api-proxy {args[0]}
+  }
+
+  import serve-proxy
+}
+
+:4308 {
+  encode {
+    zstd better  # Good balance
+    gzip 6       # Good balance
+  }
+
+  import app-routes "https://www.gitpod.io"
+}

@@ -4,8 +4,20 @@ services:
     description: Caddy web server
     commands:
       ready: |
-        curl http://localhost:8080 2>/dev/null
+        curl http://localhost:4308 2>/dev/null
       start: | 
+        gitpod env port open 4308 --name Caddy
         caddy run --config Caddyfile
       stop: |
-        caddy stop
+        pkill -f "caddy run --config Caddyfile"
+  python-server:
+    name: Python Web Server
+    description: Basic Python HTTP server on port 4208
+    commands:
+      ready: |
+        curl http://localhost:4208 2>/dev/null
+      start: |
+        cd website
+        python3 -m http.server 4208
+      stop: |
+        pkill -f "python3 -m http.server 4208"
