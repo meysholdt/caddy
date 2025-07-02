@@ -1,0 +1,11 @@
+services:
+  caddy:
+    name: Caddy
+    description: Caddy web server
+    commands:
+      ready: |
+        curl http://localhost:8080 2>/dev/null
+      start: | 
+        caddy run --config Caddyfile
+      stop: |
+        caddy stop

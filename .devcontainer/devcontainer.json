@@ -1,0 +1,38 @@
+{
+  "name": "caddy",
+  "image": "mcr.microsoft.com/devcontainers/base:latest",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "remoteUser": "gitpod",
+  "containerUser": "gitpod",
+  "workspaceFolder": "/workspace/caddy",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace/caddy,type=bind",
+  "forwardPorts": [
+    80,
+    443
+  ],
+  "portsAttributes": {
+    "443": {
+      "label": "Port 443",
+      "protocol": "https",
+      "onAutoForward": "openPreview",
+      "elevateIfNeeded": true
+    },
+    "80": {
+      "label": "Port 80",
+      "protocol": "http",
+      "onAutoForward": "openPreview",
+      "elevateIfNeeded": true
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.vscode-json",
+        "bradlc.vscode-tailwindcss",
+        "ms-vscode.vscode-typescript-next"
+      ]
+    }
+  }
+}

@@ -1,0 +1,102 @@
+# Caddyfile configuration for Gitpod workspace
+# This file configures Caddy to serve a simple web application
+
+# Global options
+{
+    # Enable admin API for configuration management
+    admin off
+    
+    # Log level
+    log {
+        level INFO
+    }
+    
+    # Auto HTTPS settings
+    auto_https disable_redirects
+}
+
+# Main site configuration
+:8080 {
+    # Root directory for static files
+    root * /workspaces/caddy/website
+    
+    # Enable file server
+    file_server
+    
+    # Enable directory browsing
+    # browse
+    
+    # Handle 404 errors
+    try_files {path} /index.html
+    
+    # Basic security headers
+    header {
+        # Security headers
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy strict-origin-when-cross-origin
+        
+        # Remove server header
+        -Server
+    }
+    
+    # Logging
+    log {
+        output stdout
+        format console
+        level INFO
+    }
+    
+    # Handle common file types
+    @static {
+        file
+        path *.css *.js *.png *.jpg *.jpeg *.gif *.ico *.svg *.woff *.woff2 *.ttf *.eot
+    }
+    header @static Cache-Control "public, max-age=31536000"
+}
+
+# # HTTPS configuration (if needed)
+# :443 {
+#     # Root directory for static files
+#     root * /workspace/public
+    
+#     # Enable file server
+#     file_server
+    
+#     # Enable directory browsing
+#     # browse
+    
+#     # Handle 404 errors
+#     try_files {path} /index.html
+    
+#     # TLS configuration
+#     tls internal
+    
+#     # Basic security headers
+#     header {
+#         # Security headers
+#         X-Content-Type-Options nosniff
+#         X-Frame-Options DENY
+#         X-XSS-Protection "1; mode=block"
+#         Referrer-Policy strict-origin-when-cross-origin
+#         Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        
+#         # Remove server header
+#         -Server
+#     }
+    
+#     # Logging
+#     log {
+#         output stdout
+#         format console
+#         level INFO
+#     }
+    
+#     # Handle common file types
+#     @static {
+#         file
+#         path *.css *.js *.png *.jpg *.jpeg *.gif *.ico *.svg *.woff *.woff2 *.ttf *.eot
+#     }
+#     header @static Cache-Control "public, max-age=31536000"
+# } 
